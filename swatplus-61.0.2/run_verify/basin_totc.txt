@@ -1,0 +1,4 @@
+ demo                      SWAT+ 2026-05-13        MODULAR Rev 2026.unknown                               
+ BSN_TOTC                basin_totc.txt
+        jday          yr        unit    soil_tot_c   plant_tot_c     rsd_tot_c 
+          --          --          --          kg/ha         kg/ha         kg/ha

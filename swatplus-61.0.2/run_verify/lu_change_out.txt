@@ -1,0 +1,2 @@
+ demo                      SWAT+ 2026-05-13        MODULAR Rev 2026.unknown                               
+          hru       year         mon         day     operation   lu_before         lu_after
