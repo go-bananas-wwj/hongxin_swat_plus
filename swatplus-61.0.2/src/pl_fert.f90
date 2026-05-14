@@ -13,6 +13,7 @@
       use mgt_operations_module
       use fertilizer_data_module
       use basin_module
+      use soil_module
       use organic_mineral_mass_module
       use hru_module, only : ihru, fertn, fertp, fertnh3, fertno3, fertorgn, fertorgp, fertp,  &
         fertsolp  
@@ -44,6 +45,9 @@
       real :: orgc_f = 0.
       
       j = ihru
+      write(*,*) "DEBUG pl_fert: j=", j, " nly=", soil(j)%nly, " ifrt=", ifrt, " fertop=", fertop, " frt_kg=", frt_kg
+      write(*,*) "DEBUG allocated mn=", allocated(soil1(j)%mn), " size mn=", size(soil1(j)%mn)
+      write(*,*) "DEBUG allocated str=", allocated(soil1(j)%str), " size str=", size(soil1(j)%str)
       
       X1 = 0.
       X8 = 0.
@@ -62,10 +66,19 @@
 
       do l = 1, 2
         xx = 0.
-        if (l == 1) then
-          xx = chemapp_db(fertop)%surf_frac
+        if (fertop > 0) then
+          if (l == 1) then
+            xx = chemapp_db(fertop)%surf_frac
+          else
+            xx = 1. - chemapp_db(fertop)%surf_frac
+          endif
         else
-          xx = 1. - chemapp_db(fertop)%surf_frac                     
+          !! fallback when chem_app.ops is empty or unmatched
+          if (l == 1) then
+            xx = 0.5
+          else
+            xx = 0.5
+          endif
         endif
 
         soil1(j)%mn(l)%no3 = soil1(j)%mn(l)%no3 + xx * frt_kg *          &
