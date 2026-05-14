@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swatplus-auto"
+version = "0.1.0"
+description = "A config-driven, reusable framework for SWAT+ watershed modeling"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Hongxin SWAT+ Team"},
+]
+keywords = ["swat", "hydrology", "watershed", "modeling", "tau_dem"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Hydrology",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "numpy",
+    "pandas",
+    "geopandas",
+    "rasterio",
+    "xarray",
+    "netCDF4",
+    "scipy",
+    "pyproj",
+    "shapely",
+    "pyyaml",
+    "click",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "black", "ruff"]
+
+[project.scripts]
+swatplus-auto = "swatplus_auto.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/go-bananas-wwj/hongxin_swat_plus"
+Repository = "https://github.com/go-bananas-wwj/hongxin_swat_plus"

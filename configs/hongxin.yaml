@@ -1,0 +1,70 @@
+# SWAT+ Auto configuration for Hongxin (红心村) watershed
+# Projection: WGS_1984_UTM_51N (EPSG:32651)
+
+project:
+  name: hongxin_swat
+  workspace: ./workspace
+  simulation_period: [2012, 2022]
+  warmup_years: 2
+
+basin:
+  # Raw data paths (relative to project root)
+  dem_path: ./data/01_raw/dem/output_hh_utm51N_hongxinClip2.tif
+  landuse_path: ./data/01_raw/landuse/CLCD_2018_clip_hongxin.tif
+  soil_path: ./data/01_raw/soil/HWSD2_clip_utm51n_90m.tif
+  
+  # Watershed outlet: Zhenxi (镇西) station
+  outlet_coords: [122.371902, 45.849787]  # [lon, lat]
+  
+  # Coordinate reference system
+  projection: EPSG:32651  # WGS84 UTM Zone 51N
+  
+  # Subbasin delineation threshold
+  threshold_area_km2: 50
+
+weather:
+  # CMFD v2.0 meteorological data
+  cmfd_dir: ./data/01_raw/cmfd_v2_daily/nc_files
+  
+  # CDAT temperature (max/min) for 2012-2018
+  cdat_dir: ./data/01_raw/cdat/cdat
+  
+  # All-sky temperature (max/min) for 2019-2022
+  allsky_dir: ./data/01_raw/allsky_temp
+  
+  # CMFD variables to use (temp excluded, replaced by CDAT/All-sky)
+  variables: [lrad, prec, rhum, srad, wind]
+  
+  # Virtual weather station grid spacing
+  grid_spacing_deg: 0.1
+  
+  # Station ID prefix and padding
+  station_prefix: wx
+  station_padding: 3
+
+model:
+  # SWAT+ executable path
+  swatplus_executable: ./swatplus
+  
+  # Reservoir: Chaersen (察尔森) reservoir
+  reservoirs:
+    - id: res12
+      name: Chaersen
+  
+  # Output variables of interest
+  output_variables: [flo_out, sed_out]
+  
+  # Print settings
+  print_frequency: daily
+
+# Calibration (placeholder, to be implemented when observed flow data is available)
+calibration:
+  enabled: false
+  method: sufi2  # or dds, pso
+  objective_function: nse
+  observed_flow_dir: ./data/01_raw/hydrology
+  stations:
+    - id: zhenxi
+      name: Zhenxi
+      coords: [122.371902, 45.849787]
+      is_outlet: true
