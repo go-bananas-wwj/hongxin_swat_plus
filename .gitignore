@@ -71,3 +71,9 @@ nohup.out
 # ModelScope token (security)
 *.token
 .env
+
+# Project data directories (large files, processed outputs)
+data/
+Datasets/
+workspace/
+modelscope_upload/
