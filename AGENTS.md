@@ -206,7 +206,8 @@ tmux kill-session -t swatplus_run
 - **2019-01-01 `floating invalid` 已修复**：根因为温度输入存在 NaN（All-sky 边缘站点），已填充并验证。
 - **碳输出已关闭**：`codes.bsn` 中 `carbon=0`，`print.prt` 中 `hru_nb` avann 关闭，避免 `hru_*_stat.txt` 占用数十 GB 磁盘。
 - **日输出已配置**：`print.prt` 中 `channel` 和 `channel_sd` daily 设为 `y`，可生成 `channel_sd_day.txt` 用于校准。
-- **当前运行**：使用 tmux 运行 2012–2022 全时段模拟，正在验证中。
+- **2012–2022 全时段模拟已成功完成**：`Execution successfully completed`，共 4021 天输出（`basin_wb_day.txt`）。
+- **注意**：当前配置缺少 `channel.con`，未生成 `channel_day.txt` 日径流输出。如需 channel 日流量用于校准，需补充 channel 连接配置。
 
 ---
 
