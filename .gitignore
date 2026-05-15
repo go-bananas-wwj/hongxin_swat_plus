@@ -82,7 +82,6 @@ modelscope_upload/
 datasets/*.zip
 datasets/new_extracted/
 scripts/*.log
-scripts/*.sh
 
 # SWAT+ test outputs (Ames example)
 swatplus-61.0.2/data/Ames_sub1/*.txt

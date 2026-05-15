@@ -158,7 +158,32 @@ SWAT+ 每次运行会产生大量输出文件。为节省磁盘空间，**运行
   rm -f lu_change_out.txt yield.out reservoir_sed.txt
   ```
 
-### 3. 代码规范
+### 3. 长时间任务运行规范 ⭐
+
+SWAT+ 全流域 11 年模拟需要 **2–4 小时**。必须使用 **tmux** 运行，防止 SSH/session 断开导致模拟中断。
+
+```bash
+# 1. 安装 tmux（如未安装）
+apt-get install -y tmux
+
+# 2. 在 TxtInOut 目录创建 detached tmux session
+cd data/02_processed/TxtInOut_v61
+tmux new-session -d -s swatplus_run './swatplus61.exe'
+
+# 3. 查看实时进度
+tmux attach -t swatplus_run
+# （按 Ctrl+B 然后 D  detach，不要按 Ctrl+C 终止！）
+
+# 4. 后台检查进度（不 attach）
+tmux capture-pane -t swatplus_run -p | tail -10
+
+# 5. 模拟结束后清理 session
+tmux kill-session -t swatplus_run
+```
+
+**禁止**：直接用 `./swatplus61.exe &` 或 `nohup` 运行——session 超时后进程会被 SIGTERM 杀死。
+
+### 4. 代码规范
 
 - 数据处理脚本使用 Python（推荐 conda env `hongxin_swat`）
 - SWAT+ 模型编译使用 Intel oneAPI ifx 2024.1.2
@@ -178,8 +203,10 @@ SWAT+ 每次运行会产生大量输出文件。为节省磁盘空间，**运行
 - `climate_control.f90`: 已修复除零保护
 
 ### 当前模拟状态
-- 2012–2018 可正常运行
-- **2019-01-01 崩溃**：`et_pot.f90` floating invalid，正在排查
+- **2019-01-01 `floating invalid` 已修复**：根因为温度输入存在 NaN（All-sky 边缘站点），已填充并验证。
+- **碳输出已关闭**：`codes.bsn` 中 `carbon=0`，`print.prt` 中 `hru_nb` avann 关闭，避免 `hru_*_stat.txt` 占用数十 GB 磁盘。
+- **日输出已配置**：`print.prt` 中 `channel` 和 `channel_sd` daily 设为 `y`，可生成 `channel_sd_day.txt` 用于校准。
+- **当前运行**：使用 tmux 运行 2012–2022 全时段模拟，正在验证中。
 
 ---
 
@@ -189,5 +216,3 @@ SWAT+ 每次运行会产生大量输出文件。为节省磁盘空间，**运行
 
 1. **pres/shum 使用**：CMFD 的 pres（气压）和 shum（比湿）当前未用于 SWAT+，是否保留仅作备份？
 2. **ModelScope 备份**：`data/02_processed/weather_stations/` 下 3000+ 个 CSV 小文件是否需要打包上传 ModelScope？
-3. **SWAT+ 日输出配置**：当前 `print.prt` 是否配置了 `channel_sd_day.txt` 等日输出？如未配置，校准时需要。
-4. **2019-01-01 崩溃**：`et_pot.f90` floating invalid 的根因待确认（温度数据已排除 NaN，可能需调试编译）
