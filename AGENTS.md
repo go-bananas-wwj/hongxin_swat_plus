@@ -183,7 +183,46 @@ tmux kill-session -t swatplus_run
 
 **禁止**：直接用 `./swatplus61.exe &` 或 `nohup` 运行——session 超时后进程会被 SIGTERM 杀死。
 
-### 4. 代码规范
+### 4. 可视化规范 ⭐
+
+所有 SWAT+ 模拟结果可视化必须统一使用以下风格和脚本，确保图表一致性。
+
+**标准脚本**：`visualize_results.py`（或后续迭代版本）
+
+**参考风格**：`/workspace/run_workflow_deli9.py`（Mac deli9 项目的成熟可视化流程）
+
+#### 图表类型与规范
+
+| 图表 | 布局 | 尺寸 | 必要元素 |
+|------|------|------|----------|
+| **日流量对比** | 3×1 子图（降水/流量/残差） | `figsize=(16, 9)` 或 `(18, 9)` | 降水倒置Y轴、实测(蓝)+模拟(橙)流量线、残差柱状图、NSE/KGE/PBIAS/R²/RMSE 指标框 |
+| **全时段合并图** | 同上 + 虚线分割 | `figsize=(18, 9)` | 验证期/率定期虚线分割(gray `--`)、左右双指标框、时期标注 |
+| **散点图** | 1×1 | `figsize=(7, 7)` | 1:1 虚线、等比例坐标、R²/NSE/n 指标框(wheat色) |
+| **月均流量** | 1×1 柱状图 | `figsize=(16, 5)` | 实测(蓝)+模拟(橙)并列柱、每3个月一个x刻度 |
+
+#### 样式细节
+
+- **配色**：实测 `#1f77b4`(蓝)，模拟 `#ff7f0e`(橙)，降水 `#2457ce`，残差正 `#ff7f0e` / 负 `#1f77b4`
+- **指标框样式**：`boxstyle='round,pad=0.5'`，验证期 `facecolor='#e6f2ff'`，率定期 `facecolor='#fff2e6'`，全时段/散点图 `facecolor='wheat'`
+- **字体**：`Noto Sans CJK JP`（支持中文），若缺失则回退 `DejaVu Sans`
+- **X轴格式**：`%Y-%m`，`MonthLocator(interval=3)`，旋转45°
+- **DPI**：`PLOT_DPI = 200`
+- **单位**：流量统一转换为 **m³/s**（`channel_day.txt` 的 `flo_out` 是 ha-m/day，需 `×10000/86400`）
+- **输出目录**：`visualization/`，命名格式 `{station}_{type}_{period}.png`
+
+#### 时期划分
+
+- 验证期：`2015–2017`
+- 率定期：`2018–2022`
+- 预热期：`2012–2014`（不参与指标计算）
+
+#### 新增可视化脚本要求
+
+- 任何新的可视化脚本必须继承上述风格和配色
+- 使用 `matplotlib` + `numpy`，配置中文字体支持
+- 脚本应支持命令行运行，自动读取 `output/TxtInOut/channel_day.txt` 和 `datasets/processed_hydro/`
+
+### 5. 代码规范
 
 - 数据处理脚本使用 Python（推荐 conda env `hongxin_swat`）
 - SWAT+ 模型编译使用 Intel oneAPI ifx 2024.1.2
@@ -205,9 +244,10 @@ tmux kill-session -t swatplus_run
 ### 当前模拟状态
 - **2019-01-01 `floating invalid` 已修复**：根因为温度输入存在 NaN（All-sky 边缘站点），已填充并验证。
 - **碳输出已关闭**：`codes.bsn` 中 `carbon=0`，`print.prt` 中 `hru_nb` avann 关闭，避免 `hru_*_stat.txt` 占用数十 GB 磁盘。
-- **日输出已配置**：`print.prt` 中 `channel` 和 `channel_sd` daily 设为 `y`，可生成 `channel_sd_day.txt` 用于校准。
-- **2012–2022 全时段模拟已成功完成**：`Execution successfully completed`，共 4021 天输出（`basin_wb_day.txt`）。
-- **注意**：当前配置缺少 `channel.con`，未生成 `channel_day.txt` 日径流输出。如需 channel 日流量用于校准，需补充 channel 连接配置。
+- **日输出已配置**：`print.prt` 中 `channel` 和 `channel_sd` daily 设为 `y`，可生成 `channel_day.txt` 用于校准。
+- **`file.cio` 已修复**：connect 行已加入 `reservoir.con`，reservoir 对象正确实例化。
+- **`command.f90` 已修复**：channel routing 和 reservoir routing 均已恢复。
+- **注意**：当前磁盘上的 `channel_day.txt`（2026-05-17 00:48）是旧运行结果，模拟指标差（NSE≈-2.45）。之前某次 session 曾得到 NSE=0.829 的好结果，但 `output/TxtInOut/` 不在 git 跟踪中，该输出已被后续运行覆盖。如需恢复好结果，需重新运行模型。
 
 ---
 
