@@ -1,0 +1,91 @@
+# SWAT+ Automated Setup Configuration
+# This YAML file configures the entire watershed delineation -> HRU -> TxtInOut workflow
+
+project:
+  name: "hongxin"
+  # Base output directory. Subfolders will be created:
+  #   {output_dir}/delineation/  - shapefiles and rasters
+  #   {output_dir}/hrus/         - HRU report and intermediate files
+  #   {output_dir}/TxtInOut/     - SWAT+ input files
+  output_dir: "/workspace/hongxin_swaw_plus/output"
+  # If true, reuse existing delineation shapefiles instead of re-running TauDEM
+  use_existing_delineation: true
+  # Path to an existing TxtInOut to copy parameter templates from (soils.sol, plants.plt, etc.)
+  template_txtinout: "/workspace/hongxin_swaw_plus/data/02_processed/TxtInOut_v61"
+
+inputs:
+  dem:
+    path: "/root/Desktop/qswat_data/hongxin_swat/Watershed/Rasters/DEM/output_hh_utm51N_hongxinClip2.tif"
+    vertical_factor: 1.0  # multiplier to convert DEM units to meters
+  
+  outlets:
+    path: "/root/Desktop/qswat_data/hongxin_swat/Watershed/Shapes/combined_inlets_outlets_snap.shp"
+    # Field in shapefile that identifies outlet type: 0=outlet, 1=inlet, 2=reservoir, etc.
+    type_field: "INLET"
+    # Field for reservoir flag
+    res_field: "RES"
+  
+  landuse:
+    raster: "/root/Desktop/qswat_data/hongxin_swat/Watershed/Rasters/Landuse/CLCD_2018_clip_hongxin.tif"
+    # Path to lookup CSV with columns: id, name, description, ...
+    # If null, will read from project SQLite landuse_lookup table
+    lookup_csv: null
+    # Project SQLite path (used if lookup_csv is null)
+    lookup_sqlite: "/root/Desktop/qswat_data/hongxin_swat/hongxin_swat.sqlite"
+    lookup_table: "landuse_lookup"
+  
+  soil:
+    raster: "/root/Desktop/qswat_data/hongxin_swat/Watershed/Rasters/Soil/HWSD2_clip_utm51n_90m.tif"
+    lookup_csv: null
+    lookup_sqlite: "/root/Desktop/qswat_data/hongxin_swat/hongxin_swat.sqlite"
+    lookup_table: "soil_lookup"
+  
+  slope:
+    raster: "/root/Desktop/qswat_data/hongxin_swat/Watershed/Rasters/DEM/output_hh_utm51N_hongxinClip2slopes.tif"
+    # Slope class limits in percent. HRUs will be split by these slope classes.
+    # Example: [0, 2, 5, 999] creates classes 0-2%, 2-5%, >5%
+    limits: [0, 2, 5, 999]
+
+delineation:
+  # TauDEM executable directory
+  taudem_bin: "/usr/local/share/SWATPlus/TauDEM5Bin"
+  algorithm: "d8"
+  # Stream threshold in number of cells
+  stream_threshold: 64756
+  # Channel threshold in number of cells (should be <= stream_threshold)
+  channel_threshold: 60967
+  # Maximum snap distance for outlets in map units (meters for UTM)
+  snap_distance: 500
+  # If use_existing_delineation is true, these paths are used instead of re-running TauDEM
+  existing:
+    channel_shp: "/root/Desktop/qswat_data/hongxin_swat/Watershed/Shapes/channel_new3.shp"
+    stream_shp: "/root/Desktop/qswat_data/hongxin_swat/Watershed/Shapes/stream_new.shp"
+    subbasin_shp: "/root/Desktop/qswat_data/hongxin_swat/Watershed/Shapes/output_hh_utm51N_hongxinClip2subbasins_new.shp"
+    # Watershed raster will be generated from subbasin_shp if not provided
+    watershed_raster: null
+
+hru:
+  # HRU creation mode:
+  #   "dominant"  - one HRU per subbasin (dominant landuse/soil/slope)
+  #   "multiple"  - one HRU per landuse/soil/slope combination in each subbasin
+  mode: "multiple"
+  # Minimum HRU area in hectares. HRUs smaller than this will be merged.
+  min_area_ha: 0.0
+  # Minimum HRU percentage of subbasin area. If 0, no threshold-based removal.
+  min_percent: 0.0
+  # If true, generate full HRU shapefile (slower)
+  generate_full_hrus: false
+  # Target number of HRUs per subbasin (for target mode; not yet implemented)
+  target_hrus: null
+
+swatplus:
+  # Simulation period
+  start_date: "2018-01-01"
+  end_date: "2020-12-31"
+  time_step: "0"  # 0=daily, 1=monthly, 2=yearly
+  # Number of warm-up years
+  warmup_years: 1
+  # Print frequency (daily, monthly, yearly)
+  print_frequency: "daily"
+  # Weather data path (if available; otherwise null)
+  weather_dir: null
