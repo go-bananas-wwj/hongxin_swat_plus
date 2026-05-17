@@ -32,7 +32,11 @@
         res_ob(ires)%esa = res_hyd(ires)%esa
         res_ob(ires)%psa = res_hyd(ires)%psa
         !! set initial weir height to principal depth - m
-        res_ob(ires)%weir_hgt = res_ob(ires)%pvol / (res_ob(ires)%psa * 10000.)
+        if (res_ob(ires)%psa <= 0.) then
+          res_ob(ires)%weir_hgt = 0.
+        else
+          res_ob(ires)%weir_hgt = res_ob(ires)%pvol / (res_ob(ires)%psa * 10000.)
+        end if
         
         !! use br1 as lag - then compute actual br1 (no option to input actual br1)
         res_ob(ires)%lag_up = res_hyd(ires)%br1

@@ -69,6 +69,7 @@
       real :: rttlc_d = 0.
       real :: rtevp_d = 0.
                          
+      ch_d(jrch)%flo_in = 0.
       ch_d(jrch)%flo_out = 0.
       ch_d(jrch)%evap = 0.
       jhyd = ch_dat(jrch)%hyd
@@ -202,6 +203,14 @@
       else
         ch_d(jrch)%tot_ssed = rch_sil + rch_cla
       endif
+      
+      !! set daily inflow and outflow (ha-m)
+      ch_d(jrch)%flo_in = wtrin / 10000.
+      ch_d(jrch)%flo_out = rtwtr_d / 10000.
+      
+      !! set outflow hydrograph for downstream routing
+      ob(icmd)%hd(1)%flo = rtwtr_d
+      ob(icmd)%hd(1)%sed = sedrch
       
       return
 

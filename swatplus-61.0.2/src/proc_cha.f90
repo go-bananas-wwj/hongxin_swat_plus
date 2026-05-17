@@ -19,7 +19,7 @@
       call sd_channel_read
       call sd_hydsed_init
 
-      !call channel_allo
+      call channel_allo
           
       !! intialize stream-aquifer interactions for geomorphic baseflow
       !! aquifer to channel flow

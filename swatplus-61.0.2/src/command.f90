@@ -281,12 +281,12 @@
               call aqu_1d_control
             end if
           
-          !case ("chan")   ! channel
-          !  jrch = ob(icmd)%num
-          !  jrchq = ob(icmd)%props2
-          !  if (ob(icmd)%rcv_tot > 0) then
-          !    call channel_control
-          ! end if
+          case ("chan")   ! channel
+            jrch = ob(icmd)%num
+            jrchq = ob(icmd)%props2
+            if (ob(icmd)%rcv_tot > 0) then
+              call channel_control
+            end if
 
           case ("res")   ! reservoir
             ires = ob(icmd)%num

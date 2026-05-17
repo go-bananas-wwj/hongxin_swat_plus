@@ -189,26 +189,60 @@ tmux kill-session -t swatplus_run
 
 **标准脚本**：`visualize_results.py`（或后续迭代版本）
 
-**参考风格**：`/workspace/run_workflow_deli9.py`（Mac deli9 项目的成熟可视化流程）
+**参考风格**：`/workspace/run_workflow_deli9.py`（Mac deli9 项目的成熟可视化流程）——**以后所有可视化都参考此文件实现**
+
+#### 字体配置（必须）
+
+```python
+plt.rcParams['font.sans-serif'] = [
+    'PingFang SC', 'PingFang HK', 'Hiragino Sans GB', 'STHeiti',
+    'Heiti TC', 'Microsoft YaHei', 'SimHei', 'Lantinghei SC',
+    'Noto Sans CJK SC', 'DejaVu Sans'
+]
+plt.rcParams['axes.unicode_minus'] = False
+plt.rcParams['font.family'] = 'sans-serif'
+```
 
 #### 图表类型与规范
 
 | 图表 | 布局 | 尺寸 | 必要元素 |
 |------|------|------|----------|
-| **日流量对比** | 3×1 子图（降水/流量/残差） | `figsize=(16, 9)` 或 `(18, 9)` | 降水倒置Y轴、实测(蓝)+模拟(橙)流量线、残差柱状图、NSE/KGE/PBIAS/R²/RMSE 指标框 |
-| **全时段合并图** | 同上 + 虚线分割 | `figsize=(18, 9)` | 验证期/率定期虚线分割(gray `--`)、左右双指标框、时期标注 |
-| **散点图** | 1×1 | `figsize=(7, 7)` | 1:1 虚线、等比例坐标、R²/NSE/n 指标框(wheat色) |
-| **月均流量** | 1×1 柱状图 | `figsize=(16, 5)` | 实测(蓝)+模拟(橙)并列柱、每3个月一个x刻度 |
+| **日流量对比** | 3×1 子图（降水/流量/残差） | `figsize=(16, 9)`，`gridspec_kw={'height_ratios': [1, 3, 1]}`，`sharex=True` | 降水倒置Y轴、实测(蓝)+模拟(橙)流量线、fill_between实测、残差柱状图、NSE/KGE/PBIAS/R²/RMSE 指标框 |
+| **全时段合并图** | 同上 + 虚线分割 | `figsize=(18, 9)` | 验证期/率定期虚线分割(gray `--` linewidth=1.2)、左右双指标框(验证期`#e6f2ff`左/率定期`#fff2e6`右)、时期标注 |
+| **散点图** | 1×1 | `figsize=(7, 7)` | scatter s=8 alpha=0.4 color='#1f77b4' edgecolors='none'、1:1 虚线、aspect='equal'、R²/NSE/n 指标框(wheat色) |
+| **月均流量** | 1×1 柱状图 | `figsize=(16, 5)` | 并列柱 width=0.35、实测(蓝)+模拟(橙)、每3个月一个x刻度、rotation=45 |
 
 #### 样式细节
 
-- **配色**：实测 `#1f77b4`(蓝)，模拟 `#ff7f0e`(橙)，降水 `#2457ce`，残差正 `#ff7f0e` / 负 `#1f77b4`
-- **指标框样式**：`boxstyle='round,pad=0.5'`，验证期 `facecolor='#e6f2ff'`，率定期 `facecolor='#fff2e6'`，全时段/散点图 `facecolor='wheat'`
-- **字体**：`Noto Sans CJK JP`（支持中文），若缺失则回退 `DejaVu Sans`
-- **X轴格式**：`%Y-%m`，`MonthLocator(interval=3)`，旋转45°
+- **配色（严格遵循）**：
+  - 实测流量：`#1f77b4`（蓝），linewidth=0.9，alpha=0.9
+  - 模拟流量：`#ff7f0e`（橙），linewidth=0.8，alpha=0.8
+  - 降水：`#2457ce`（深蓝），alpha=0.6，width=1.0
+  - 实测fill_between：alpha=0.1，color='#1f77b4'
+  - 正残差：`#ff7f0e`，负残差：`#1f77b4`，alpha=0.6，width=1.0
+  - 验证期指标框：`facecolor='#e6f2ff'`，alpha=0.9
+  - 率定期指标框：`facecolor='#fff2e6'`，alpha=0.9
+  - 通用指标框：`facecolor='wheat'`，alpha=0.8
+  - 分割虚线：gray，`linestyle='--'`，linewidth=1.2，alpha=0.8
+
+- **指标框样式**：`boxstyle='round,pad=0.5'`，右上角(流量图)或左上角(散点图)
+- **X轴格式**：`DateFormatter('%Y-%m')`，`MonthLocator(interval=3)`，rotation=45°，ha='right'
+- **网格线**：`grid(True, linestyle='--', alpha=0.4)`
 - **DPI**：`PLOT_DPI = 200`
 - **单位**：流量统一转换为 **m³/s**（`channel_day.txt` 的 `flo_out` 是 ha-m/day，需 `×10000/86400`）
 - **输出目录**：`visualization/`，命名格式 `{station}_{type}_{period}.png`
+
+#### 子图详细规范
+
+**日流量对比图 (3×1)**：
+1. **降水子图（顶部）**：`ax0.bar(dates, precip, color="#2457ce", alpha=0.6, width=1.0)`，Y轴倒置 `set_ylim(max*1.2, 0)`，ylabel='降水 (mm)'
+2. **流量子图（中部）**：实测线 + 模拟线 + fill_between，title=`{station} {period} 日流量对比` fontsize=14 fontweight='bold'，ylabel='流量 (m³/s)'，legend loc='lower left' bbox_to_anchor=(0.02, 0.10)
+3. **残差子图（底部）**：`colors = ['#ff7f0e' if r > 0 else '#1f77b4' for r in residuals]`，ylabel='残差 (m³/s)'，xlabel='日期'
+
+**全时段合并图**：
+- 验证期指标框放左侧 (`transform=ax1.transAxes, 0.02, 0.97`)
+- 率定期指标框放右侧 (`transform=ax1.transAxes, 0.98, 0.97`)
+- 虚线旁标注时期名称（验证期/率定期），gray色，fontweight='bold'
 
 #### 时期划分
 
@@ -218,7 +252,8 @@ tmux kill-session -t swatplus_run
 
 #### 新增可视化脚本要求
 
-- 任何新的可视化脚本必须继承上述风格和配色
+- **任何新的可视化脚本必须严格参考 `/workspace/run_workflow_deli9.py` 的实现**
+- 继承上述风格、配色、字体、布局规范
 - 使用 `matplotlib` + `numpy`，配置中文字体支持
 - 脚本应支持命令行运行，自动读取 `output/TxtInOut/channel_day.txt` 和 `datasets/processed_hydro/`
 

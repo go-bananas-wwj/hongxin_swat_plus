@@ -552,8 +552,16 @@ class TxtInOutGenerator:
                         n_obj = len(self.hrus) + len(self.linkno_to_cha) + len(self.reservoirs) + 1
                         lines[i] = f"  object       {n_obj}    null\n"
             
-            # Update reservoir line if reservoirs exist
+            # Update connect and reservoir lines if reservoirs exist
             if self.reservoirs:
+                for i, line in enumerate(lines):
+                    if line.strip().startswith("connect"):
+                        parts = line.strip().split()
+                        # parts[8] is res_con (currently null) -> change to reservoir.con
+                        if len(parts) > 9:
+                            parts[9] = "reservoir.con"
+                            lines[i] = f"{parts[0]:18s}{parts[1]:18s}{parts[2]:18s}{parts[3]:18s}{parts[4]:18s}{parts[5]:18s}{parts[6]:18s}{parts[7]:18s}{parts[8]:18s}{parts[9]:18s}{parts[10]:18s}{parts[11]:18s}{parts[12]:18s}{parts[13]:18s}\n"
+                        break
                 for i, line in enumerate(lines):
                     if line.strip().startswith("reservoir"):
                         lines[i] = "reservoir         initial.res       reservoir.res     hydrology.res     sediment.res      nutrients.res     null              null\n"

@@ -84,6 +84,7 @@
 
       fps = 4.
       d = ch_hyd(k)%d
+      if (d <= 1.e-6) d = 0.001
       b = ch_hyd(k)%w - 2. * d * chsslope
 
 

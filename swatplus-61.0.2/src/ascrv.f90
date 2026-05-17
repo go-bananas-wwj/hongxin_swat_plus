@@ -29,6 +29,14 @@
                                   !              |characterizing the regions close to the
                                   !              |endpoints of the curve
 
+      !! Guard against invalid inputs that cause divide by zero or log of non-positive
+      if (x1 <= 0. .or. x2 <= 0. .or. x3 <= 0. .or. x4 <= 0. .or. &
+          abs(x4 - x3) < 1.e-6 .or. x4/x2 - x4 <= 0.) then
+        x5 = 0.
+        x6 = 0.
+        return
+      end if
+
       xx = Log(x3/x1 - x3)
       x6 = (xx - Log(x4/x2 - x4)) / (x4 - x3)
       x5 = xx + (x3 * x6)

@@ -65,8 +65,8 @@ def read_channel_day(txtout_dir: Path) -> Optional[pd.DataFrame]:
     for fname in ["channel_sd_day.txt", "channel_day.txt"]:
         path = txtout_dir / fname
         if path.exists():
-            df = pd.read_csv(path, sep=r"\s+", low_memory=False)
-            df["date"] = pd.to_datetime(df[["yr", "mon", "day"]])
+            df = pd.read_csv(path, sep=r"\s+", skiprows=[0, 2], header=0, low_memory=False)
+            df["date"] = pd.to_datetime(df[["yr", "mon", "day"]].rename(columns={"yr": "year", "mon": "month", "day": "day"}))
             return df
     return None
 
@@ -76,8 +76,8 @@ def read_basin_wb_day(txtout_dir: Path) -> Optional[pd.DataFrame]:
     path = txtout_dir / "basin_wb_day.txt"
     if not path.exists():
         return None
-    df = pd.read_csv(path, sep=r"\s+", low_memory=False)
-    df["date"] = pd.to_datetime(df[["yr", "mon", "day"]])
+    df = pd.read_csv(path, sep=r"\s+", skiprows=[0, 2], header=0, low_memory=False)
+    df["date"] = pd.to_datetime(df[["yr", "mon", "day"]].rename(columns={"yr": "year", "mon": "month", "day": "day"}))
     return df
 
 
@@ -305,7 +305,7 @@ def plot_basin_water_balance(basin_df: pd.DataFrame, out_dir: Path) -> Path:
     ax.grid(True, alpha=0.3)
 
     ax = axes[2]
-    ax.plot(basin_df["date"], basin_df["sw"], color="#2E86AB", label="Soil Water", lw=0.6)
+    ax.plot(basin_df["date"], basin_df["sw_ave"], color="#2E86AB", label="Soil Water", lw=0.6)
     ax.set_ylabel("mm")
     ax.set_xlabel("Date")
     ax.set_title("Soil Water Storage")

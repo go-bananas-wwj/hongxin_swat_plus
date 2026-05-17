@@ -166,7 +166,7 @@
       enddo
       
       !sum to obtain the total outflow hydrograph (1)
-      do ihyd = 3, 5
+      do ihyd = 2, 5
         ob(icmd)%hd(1) = ob(icmd)%hd(1) + ob(icmd)%hd(ihyd)
       end do
       

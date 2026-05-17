@@ -21,16 +21,13 @@ from pathlib import Path
 from datetime import date
 
 # ============ CONFIG ============
-BASIN_AREA_HA = 2549796.86  # from hru.con
-BASIN_AREA_M2 = BASIN_AREA_HA * 10000
-MM_TO_M3S = BASIN_AREA_M2 / (1000 * 86400)
-
 TXTINOUT = Path("/workspace/hongxin_swaw_plus/data/02_processed/TxtInOut_v61")
 OBS_DIR = Path("/workspace/hongxin_swaw_plus/datasets/processed_hydro")
 OUT_DIR = Path("/workspace/hongxin_swaw_plus/figures")
 OUT_DIR.mkdir(exist_ok=True)
 
 STATION_NAME = "镇西"
+OUTLET_GIS_ID = 282  # outlet channel
 PLOT_DPI = 200
 
 # Periods
@@ -52,13 +49,23 @@ WB_COLS = [
 ]
 
 
+def read_channel_outlet():
+    """Read channel_day.txt for outlet channel (gis_id=282)."""
+    df = pd.read_csv(TXTINOUT / "channel_day.txt", sep=r"\s+", skiprows=[0, 2], header=0, low_memory=False)
+    df = df.rename(columns={"yr": "year", "mon": "month", "day": "day"})
+    df["date"] = pd.to_datetime(df[["year", "month", "day"]])
+    # Convert flo_out from ha-m/day to m3/s
+    df["sim_q"] = df["flo_out"] * 10000.0 / 86400.0
+    # Filter to outlet channel
+    df = df[df["gis_id"] == OUTLET_GIS_ID].copy()
+    return df.sort_values("date").reset_index(drop=True)
+
+
 def read_basin_wb():
-    """Read basin_wb_day.txt"""
+    """Read basin_wb_day.txt for precipitation only"""
     df = pd.read_csv(TXTINOUT / "basin_wb_day.txt", sep=r"\s+", skiprows=3, header=None, names=WB_COLS)
     df = df.rename(columns={"yr": "year", "mon": "month", "day": "day"})
     df["date"] = pd.to_datetime(df[["year", "month", "day"]])
-    df["sim_q"] = df["wateryld"] * MM_TO_M3S
-    df["sim_surq_cha"] = df["surq_cha"] * MM_TO_M3S
     return df.sort_values("date").reset_index(drop=True)
 
 
@@ -100,9 +107,10 @@ def calc_metrics(sim, obs):
     }
 
 
-def split_periods(df_sim, df_obs):
+def split_periods(df_sim, df_wb, df_obs):
     """Split into warmup, validation, calibration"""
-    merged = pd.merge(df_sim[["date", "sim_q", "precip"]], df_obs, on="date", how="inner")
+    merged = pd.merge(df_sim[["date", "sim_q"]], df_wb[["date", "precip"]], on="date", how="inner")
+    merged = pd.merge(merged, df_obs, on="date", how="inner")
     
     def _filter(years):
         if not years:
@@ -339,9 +347,13 @@ def plot_water_balance(sim_df):
 
 
 def main():
-    print("Reading basin_wb_day.txt...")
+    print("Reading channel_day.txt for outlet...")
+    sim = read_channel_outlet()
+    print(f"  Simulated days (outlet {OUTLET_GIS_ID}): {len(sim)}")
+    
+    print("Reading basin_wb_day.txt for precip...")
     wb = read_basin_wb()
-    print(f"  Simulated days: {len(wb)}")
+    print(f"  Basin wb days: {len(wb)}")
     
     print(f"Reading observed: {STATION_NAME}...")
     obs = read_obs(STATION_NAME)
@@ -352,7 +364,7 @@ def main():
     plot_water_balance(wb)
     
     # Split periods
-    warmup, val, cal = split_periods(wb, obs)
+    warmup, val, cal = split_periods(sim, wb, obs)
     print(f"\nPeriod sizes: warmup={len(warmup)}, validation={len(val)}, calibration={len(cal)}")
     
     # Metrics
@@ -379,7 +391,7 @@ def main():
     
     # Summary
     print(f"\n{'='*50}")
-    print("METRICS SUMMARY (wateryld proxy)")
+    print(f"METRICS SUMMARY (outlet channel {OUTLET_GIS_ID})")
     print(f"{'='*50}")
     if val_m:
         print(f"Validation ({VALIDATION_YEARS[0]}-{VALIDATION_YEARS[-1]}):")

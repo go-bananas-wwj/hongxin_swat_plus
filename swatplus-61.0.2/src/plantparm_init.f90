@@ -45,6 +45,14 @@
               pldb(ic)%pop1,pldb(ic)%pop2,plcp(ic)%popsc1,plcp(ic)%popsc2)
           end if
 !!        determine shape parameters for the leaf area development equation
+          if (abs(pldb(ic)%frgrw1 - pldb(ic)%frgrw2) < 1.e-6) then
+            if (pldb(ic)%frgrw2 > 0.) then
+              pldb(ic)%frgrw1 = pldb(ic)%frgrw2 * 0.99
+            else
+              pldb(ic)%frgrw1 = 0.01
+              pldb(ic)%frgrw2 = 0.02
+            end if
+          end if
           call ascrv(pldb(ic)%laimx1,pldb(ic)%laimx2,pldb(ic)%frgrw1,       & 
               pldb(ic)%frgrw2,plcp(ic)%leaf1,plcp(ic)%leaf2)
           
